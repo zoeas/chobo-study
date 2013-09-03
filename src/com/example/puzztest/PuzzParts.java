@@ -47,15 +47,11 @@ public class PuzzParts {
 
 	
 	private void resizeBitmap() {
-		float ratio=(height/2)/puzz[0].getHeight();
-		Log.d("ratio",""+ratio+","+height+","+puzz[0].getHeight());
-		ratio=0.5f;
 		Matrix m=new Matrix();
-		m.setScale(ratio, ratio);
+		m.setScale(0.6f, 0.6f);
 		
 		
 		for(int i=0;i<puzz.length;i++){
-			Log.d("puzz[i].getwidth,",puzz[i].getWidth()+","+puzz[i].getHeight()+","+ratio);
 			puzz[i]=Bitmap.createBitmap(puzz[i], 0, 0, puzz[i].getWidth(), puzz[i].getHeight(), m, false);
 		}
 	}
@@ -71,14 +67,14 @@ public class PuzzParts {
 		point[0].x=(width-puzz[0].getWidth())/2;
 		point[0].y=(height-puzz[0].getHeight())/2;
 		//hand
-		point[1].x=(int) (point[0].x+(10*density));
-		point[1].y=(int) (point[0].y+(10*density));
+		point[1].x=(int) (point[0].x+(20*density));
+		point[1].y=(int) (point[0].y+(50*density));
 		//head01
-		point[2].x=(int) (point[0].x-(30*density)); 
-		point[2].y=(int) (point[0].y-(30*density)); 
+		point[2].x=(int) (point[0].x+(12*density)); 
+		point[2].y=(int) (point[0].y-(47*density)); 
 		//head02
-		point[3].x=(int) (point[0].x+(150*density)); 
-		point[3].y=(int) (point[0].y+(150*density)); 
+		point[3].x=(int) (point[0].x+(12*density)); 
+		point[3].y=(int) (point[0].y-(47*density)); 
 		
 	}
 	
@@ -88,6 +84,17 @@ public class PuzzParts {
 	
 	public Point[] getPoint(){
 		return point;
+	}
+	
+	public void setPuzz(Bitmap[] puzz){
+		this.puzz=puzz;
+	}
+	public void setPuzz(Bitmap puzz,int index){
+		this.puzz[index]=puzz;
+	}
+	
+	public void setPoint(Point[] point){
+		this.point=point;
 	}
 	
 	
