@@ -36,6 +36,10 @@ public class PuzzView extends SurfaceView implements Callback {
 	static final int PUZZ_INI_LENGTH=3;
 	static final int PUZZ_HEAD01=2;
 	static final int PUZZ_HEAD02=3;
+	
+	// 디버그용 변수
+	int a,b,c,d;
+	//---------------
 
 	Bitmap[] puzz;
 	Point[] point;
@@ -82,7 +86,13 @@ public class PuzzView extends SurfaceView implements Callback {
 		}
 
 		Paint paint=new Paint();
+		
+		//디버그용 점----------------------
 		paint.setColor(Color.WHITE);
+		canvas.drawCircle(point[PUZZ_HEAD02].x+a,point[PUZZ_HEAD02].y+ b, 5, paint);
+		canvas.drawText(point[PUZZ_HEAD01].x+","+point[PUZZ_HEAD01].y, 50, 50, paint);
+		//-------------------------------
+		
 		mHolder.unlockCanvasAndPost(canvas);
 	}
 	
@@ -98,13 +108,23 @@ public class PuzzView extends SurfaceView implements Callback {
 	private void ani01(){
 		Bitmap head=puzz[PUZZ_HEAD02];
 		// 움직이기전의 원래 비트맵 크기와 초기 위치
-		// 회전원점을 비트맵의 가로 4/5지점, 세로 그대로 
+		// 회전원점을 비트맵의 가로 4/5지점, 세로 1/5지점
 		int puzzWidth=head.getWidth();           
 		int puzzHeight=head.getHeight();
-	    int rotateX=puzzWidth*4/5;
-	    int rotateY=puzzHeight;
-	    int puzzX=point[PUZZ_HEAD01].x;
-		int puzzY=point[PUZZ_HEAD01].y;
+	    int rotateX=puzzWidth*3/5;
+	    int rotateY=puzzHeight*2/5;
+	    int rotateYY=puzzHeight-rotateY;
+	    
+	    int puzzX=point[PUZZ_HEAD02].x;
+		int puzzY=point[PUZZ_HEAD02].y;
+		
+		 //원점,puzzX,y 확인용 - 사용후 지움-----
+		rotateY=0;
+	    a=rotateX;
+	    b=rotateYY;
+	    c=rotateX;
+	    d=rotateY;
+	    //---------------------------
 		
 		// 머리 1번을 원소스의 머리 2번자리에 저장,보존
 		puzzParts.setPuzz(puzz[PUZZ_HEAD01], PUZZ_HEAD02);
@@ -120,7 +140,7 @@ public class PuzzView extends SurfaceView implements Callback {
 			//제대로 돌아가게 보이기위해서 point을 계산
 			// 원소스의 넓이 높이를 이용해서 계산
 			point[PUZZ_HEAD01].x=(int) Math.round(puzzX+rotateX-(rotateX*Math.cos((i*degree)*Math.PI/180)));
-			point[PUZZ_HEAD01].y=(int) Math.round((puzzY+puzzHeight-(rotateHead.getHeight()-puzzWidth*1/5*Math.sin((i*degree)*Math.PI/180))));
+			point[PUZZ_HEAD01].y=(int) Math.round(puzzY+rotateYY-(rotateHead.getHeight()-rotateY*Math.cos((i*degree)*Math.PI/180)));
 			draw();
 			endDegree=i*degree;
 		}
@@ -129,7 +149,7 @@ public class PuzzView extends SurfaceView implements Callback {
 			Bitmap rotateHead=Bitmap.createBitmap(head, 0, 0, head.getWidth(), head.getHeight(), m, false);
 			puzzParts.setPuzz(rotateHead, PUZZ_HEAD01);
 			point[PUZZ_HEAD01].x=(int) Math.round(puzzX+rotateX-(rotateX*Math.cos((endDegree-i*degree)*Math.PI/180)));
-			point[PUZZ_HEAD01].y=(int) Math.round((puzzY+puzzHeight-(rotateHead.getHeight()-puzzWidth*1/5*Math.sin((endDegree-i*degree)*Math.PI/180))));
+			point[PUZZ_HEAD01].y=(int) Math.round(puzzY+rotateYY-(rotateHead.getHeight()-rotateY*Math.cos((endDegree-i*degree)*Math.PI/180)));
 			draw();
 		}
 		
