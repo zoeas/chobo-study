@@ -84,12 +84,14 @@ public class PuzzView extends SurfaceView implements Callback {
 		for (int i = 0; i < PUZZ_INI_LENGTH; i++) {
 			canvas.drawBitmap(puzz[i], point[i].x, point[i].y, null);
 		}
+		
+		
 
 		Paint paint=new Paint();
 		
 		//디버그용 점----------------------
 		paint.setColor(Color.WHITE);
-		canvas.drawCircle(point[PUZZ_HEAD02].x+a,point[PUZZ_HEAD02].y+ b, 5, paint);
+		canvas.drawCircle(a,b, 5, paint);
 		canvas.drawText(point[PUZZ_HEAD01].x+","+point[PUZZ_HEAD01].y, 50, 50, paint);
 		//-------------------------------
 		
@@ -104,56 +106,89 @@ public class PuzzView extends SurfaceView implements Callback {
 		ani04();
 	}
 	
-	//얼굴 01->02로 교체해서 rotate
+
+	
+	/*
+	 * 얼굴 01->02로 교체해서 rotate
+	 * 세팅가능값 
+	 * 		ROTATE_X,ROTATE_Y (회전원점 설정)
+	 * 		DEGREE			(1회 회전 각도 설정)
+	 * 		FREQUENCY       (회전 빈도 설정)
+	 */
+	
 	private void ani01(){
+		// 나중에 다시 되돌릴 얼굴 백업
 		Bitmap head=puzz[PUZZ_HEAD02];
 		// 움직이기전의 원래 비트맵 크기와 초기 위치
 		// 회전원점을 비트맵의 가로 4/5지점, 세로 1/5지점
 		int puzzWidth=head.getWidth();           
 		int puzzHeight=head.getHeight();
-	    int rotateX=puzzWidth*3/5;
-	    int rotateY=puzzHeight*2/5;
-	    int rotateYY=puzzHeight-rotateY;
+		
+		// ======회전을 시켜줄 기준점을 설정======= 설정가능값
+	    final int ROTATE_X=puzzWidth*3/5;
+	    final int ROTATE_Y=puzzHeight*2/5;
+	    int rotateYY=puzzHeight-ROTATE_Y; // 안드로이드는 y좌표가 거꾸로이기에 이게 실제 원점
 	    
 	    int puzzX=point[PUZZ_HEAD02].x;
 		int puzzY=point[PUZZ_HEAD02].y;
 		
-		 //원점,puzzX,y 확인용 - 사용후 지움-----
-		rotateY=0;
-	    a=rotateX;
-	    b=rotateYY;
-	    c=rotateX;
-	    d=rotateY;
+		// 안드로이드 상에 표시될 원점좌표
+		int x=puzzX+ROTATE_X;
+		int y=puzzY+rotateYY;
+		
+		//원점,puzzX,y 확인용 - 사용후 지움-----
+	    a=x;
+	    b=y;
+	    c=ROTATE_X;
+	    d=ROTATE_Y;
 	    //---------------------------
 		
 		// 머리 1번을 원소스의 머리 2번자리에 저장,보존
 		puzzParts.setPuzz(puzz[PUZZ_HEAD01], PUZZ_HEAD02);
 		
+		// ===========회전 각도,빈도 설정============ 설정가능값
 		Matrix m=new Matrix();
-		float degree=3.0f;
-		float endDegree=0;
+		final float DEGREE=3.0f;
+		final int FREQUENCY=11;
+		float radian=(float) (DEGREE*Math.PI/180);
+		float endRadian=0;
+		//반지름
+		double radiusX=Math.hypot(ROTATE_X,puzzHeight-rotateYY);
+		double radiusY=Math.hypot(ROTATE_X,rotateYY);
 		
-		for(int i=1;i<11;i++){
-			m.postRotate(degree);
+		Log.d("radius",radiusX+","+radiusY);
+		
+		//각도
+		double xdeg=Math.acos(ROTATE_X/radiusX);
+		double ydeg=Math.acos(ROTATE_X/radiusY);
+		
+		Log.d("deg",xdeg+","+ydeg);
+		
+		for(int i=1;i<FREQUENCY;i++){
+			m.postRotate(DEGREE);
 			Bitmap rotateHead=Bitmap.createBitmap(head, 0, 0, head.getWidth(), head.getHeight(), m, false);
 			puzzParts.setPuzz(rotateHead, PUZZ_HEAD01);	// 움직인 머리를 머리 1번자리에 저장
 			//제대로 돌아가게 보이기위해서 point을 계산
 			// 원소스의 넓이 높이를 이용해서 계산
-			point[PUZZ_HEAD01].x=(int) Math.round(puzzX+rotateX-(rotateX*Math.cos((i*degree)*Math.PI/180)));
-			point[PUZZ_HEAD01].y=(int) Math.round(puzzY+rotateYY-(rotateHead.getHeight()-rotateY*Math.cos((i*degree)*Math.PI/180)));
+			
+			// 원의 좌표 구하는 공식 (반지름*cos, 반지름*sin)으로 좌표를 구한후 (x,y)원점 만큼 이동
+			point[PUZZ_HEAD01].x=(int)Math.round(x-radiusX*Math.cos(i*radian-xdeg));
+			point[PUZZ_HEAD01].y=(int)Math.round(y-radiusY*Math.sin(i*radian+ydeg));
+			
 			draw();
-			endDegree=i*degree;
+			endRadian=i*radian;
 		}
-		for(int i=1;i<11;i++){
-			m.postRotate(-degree);
+		for(int i=1;i<FREQUENCY;i++){
+			m.postRotate(-DEGREE);
 			Bitmap rotateHead=Bitmap.createBitmap(head, 0, 0, head.getWidth(), head.getHeight(), m, false);
 			puzzParts.setPuzz(rotateHead, PUZZ_HEAD01);
-			point[PUZZ_HEAD01].x=(int) Math.round(puzzX+rotateX-(rotateX*Math.cos((endDegree-i*degree)*Math.PI/180)));
-			point[PUZZ_HEAD01].y=(int) Math.round(puzzY+rotateYY-(rotateHead.getHeight()-rotateY*Math.cos((endDegree-i*degree)*Math.PI/180)));
+			
+			point[PUZZ_HEAD01].x=(int)Math.round(x-radiusX*Math.cos(endRadian-i*radian-xdeg));
+			point[PUZZ_HEAD01].y=(int)Math.round(y-radiusY*Math.sin(endRadian-i*radian+ydeg));
 			draw();
 		}
 		
-		// 머리자리들을 원래대로 복구
+		// 바꿔치기한 머리를 원래대로 복구
 		puzzParts.setPuzz(puzz[PUZZ_HEAD02], PUZZ_HEAD01);
 		puzzParts.setPuzz(head, PUZZ_HEAD02);
 		draw();
