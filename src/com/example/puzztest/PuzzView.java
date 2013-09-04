@@ -34,19 +34,26 @@ import android.view.SurfaceView;
 public class PuzzView extends SurfaceView implements Callback {
 	
 	static final int PUZZ_INI_LENGTH=3;
+	static final int PUZZ_BODY=0;
+	static final int PUZZ_HAND=1;
 	static final int PUZZ_HEAD01=2;
 	static final int PUZZ_HEAD02=3;
+	static final int LIMIT=10;
+	
+	
+	Context mcontext;
+	SurfaceHolder mHolder;
 	
 	// 디버그용 변수
 	int a,b,c,d;
 	//---------------
 
+	PuzzParts puzzParts;
 	Bitmap[] puzz;
 	Point[] point;
-	SurfaceHolder mHolder;
-	PuzzParts puzzParts;
-	Context mcontext;
-	boolean openMouse=false;
+	
+	int phase,count=1,bound=1;
+	
 
 	public PuzzView(Context context) {
 		super(context);
@@ -58,8 +65,6 @@ public class PuzzView extends SurfaceView implements Callback {
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -73,10 +78,9 @@ public class PuzzView extends SurfaceView implements Callback {
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-		// TODO Auto-generated method stub
-
 	}
 
+	// 비트맵이 변형된 상태일때 그려주는 방식으로 비트맵 변형은 다른곳에서 연산하고 여기선 그냥 있는거 그대로 뿌려줌
 	private void draw() {
 		Canvas canvas = mHolder.lockCanvas();
 		canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
@@ -98,12 +102,42 @@ public class PuzzView extends SurfaceView implements Callback {
 		mHolder.unlockCanvasAndPost(canvas);
 	}
 	
+	private void draw2(){
+		boolean loop=true;
+		while(loop){
+			Canvas canvas = mHolder.lockCanvas();
+						
+			switch(phase){
+			case 2:
+				ani02(canvas);
+				break;
+			case 3:
+				ani03(canvas);
+				break;
+			case 4:
+				ani04(canvas);
+				break;
+			default:
+				loop=false;
+				break;
+			}
+			
+			mHolder.unlockCanvasAndPost(canvas);
+		}	
+		
+		draw();
+	}
+	
 
 	private void movePuzz(){
 		ani01();
-		ani02();
-		ani03();
-		ani04();
+		
+		phase=2;
+		draw2();
+//		ani02();
+//		ani03();
+//		ani04();
+		
 	}
 	
 
@@ -195,19 +229,55 @@ public class PuzzView extends SurfaceView implements Callback {
 		
 	}
 	
-	//얼굴,몸통,팔 -> 세로로 scale
-	private void ani02(){
+	//얼굴,몸통,팔 -> 세로로 scale 얼굴 크게(턱에서부터) 팔,몸통 위로 스케일
+	private void ani02(Canvas canvas){
+		canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
 		
+		float scaleY=0.005f;
+		float scaleY2=0.01f;
+		float scaleY3=0.05f;
+		
+		canvas.save();
+		canvas.scale(1, 1+scaleY*count, point[0].x+puzz[0].getWidth()/2, point[0].y+puzz[0].getHeight()*3/2);
+		canvas.drawBitmap(puzz[0],point[0].x, point[0].y, null);
+		canvas.restore();
+		
+		canvas.save();
+		canvas.scale(1, 1+scaleY2*count, point[1].x+puzz[1].getWidth()/2, point[1].y+puzz[1].getHeight()*3/2);
+		canvas.drawBitmap(puzz[1],point[1].x, point[1].y, null);
+		canvas.restore();
+
+		canvas.save();
+		canvas.scale(1, 1+scaleY3*count, point[2].x+puzz[2].getWidth()/2, point[2].y+puzz[2].getHeight());
+		canvas.drawBitmap(puzz[2],point[2].x, point[2].y, null);
+		canvas.restore();
+		
+		counter();
 	}
 	
-	//몸통,팔 -> 가로로 scale
-	private void ani03(){
+	private void counter(){
+				
+		if(count>=LIMIT){
+			bound=-1;
+		}
 		
+		count+=bound;
+		
+		if(count<0){
+			phase++;
+			bound=count=1;
+		}
+		
+	}
+	//몸통,팔 -> 가로로 scale
+	private void ani03(Canvas canvas){
+		phase=5; //강제종료
+//		counter();
 	}
 	
 	//얼굴, 몸통, 팔 -> 화면 중앙기준으로 확대
-	private void ani04(){
-		
+	private void ani04(Canvas canvas){
+		counter();
 	}
 
 	@Override
