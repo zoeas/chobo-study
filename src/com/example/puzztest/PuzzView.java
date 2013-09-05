@@ -8,9 +8,12 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.Rect;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
@@ -40,9 +43,9 @@ public class PuzzView extends SurfaceView implements Callback {
 	static final int PUZZ_HEAD02=3;
 	static final int LIMIT=10;
 	
-	
 	Context mcontext;
 	SurfaceHolder mHolder;
+	int width,height;
 	
 	// 디버그용 변수
 	int a,b,c,d;
@@ -60,6 +63,12 @@ public class PuzzView extends SurfaceView implements Callback {
 		mHolder = getHolder();
 		mHolder.addCallback(this);
 		mcontext=context;
+		
+		DisplayMetrics outMetrics=new DisplayMetrics();
+//		((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(outMetrics);
+//		width=outMetrics.widthPixels;
+//		height=outMetrics.heightPixels;
+		
 	}
 
 	@Override
@@ -70,8 +79,12 @@ public class PuzzView extends SurfaceView implements Callback {
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
 		puzzParts = new PuzzParts(mcontext);
-		puzz = puzzParts.getPuzz();
+		puzz =puzzParts.getPuzz();
 		point=puzzParts.getPoint();
+		
+		Rect rect=mHolder.getSurfaceFrame();
+		width=rect.width();
+		height=rect.height();
 		
 		draw();
 	}
@@ -117,6 +130,9 @@ public class PuzzView extends SurfaceView implements Callback {
 			case 4:
 				ani04(canvas);
 				break;
+			case 5:
+				ani05(canvas);
+				break;
 			default:
 				loop=false;
 				break;
@@ -124,15 +140,13 @@ public class PuzzView extends SurfaceView implements Callback {
 			
 			mHolder.unlockCanvasAndPost(canvas);
 		}	
-		
-		draw();
 	}
 	
 
 	private void movePuzz(){
-		ani01();
+		//ani01();
 		
-		phase=2;
+		phase=4;
 		draw2();
 //		ani02();
 //		ani03();
@@ -237,22 +251,68 @@ public class PuzzView extends SurfaceView implements Callback {
 		float scaleY2=0.01f;
 		float scaleY3=0.05f;
 		
-		canvas.save();
-		canvas.scale(1, 1+scaleY*count, point[0].x+puzz[0].getWidth()/2, point[0].y+puzz[0].getHeight()*3/2);
-		canvas.drawBitmap(puzz[0],point[0].x, point[0].y, null);
-		canvas.restore();
-		
-		canvas.save();
-		canvas.scale(1, 1+scaleY2*count, point[1].x+puzz[1].getWidth()/2, point[1].y+puzz[1].getHeight()*3/2);
-		canvas.drawBitmap(puzz[1],point[1].x, point[1].y, null);
-		canvas.restore();
-
-		canvas.save();
-		canvas.scale(1, 1+scaleY3*count, point[2].x+puzz[2].getWidth()/2, point[2].y+puzz[2].getHeight());
-		canvas.drawBitmap(puzz[2],point[2].x, point[2].y, null);
-		canvas.restore();
-		
+		// scaleDraw(캔바스, 가로변화, 세로변화, 넓이중에서의 기준점 위치, 높이중에서의 기준점 위치 ex:3/2->3/2지점,그릴 파츠) 
+		scaleDraw(canvas,1,1+scaleY*count, 1/2, 3/2, PUZZ_BODY);
+		scaleDraw(canvas,1,1+scaleY2*count, 1/2, 3/2, PUZZ_HAND);
+		scaleDraw(canvas,1,1+scaleY3*count, 1/2, 1, PUZZ_HEAD01);
+				
 		counter();
+	}
+	
+	//몸통,팔 -> 가로로 scale
+	private void ani03(Canvas canvas){
+		canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
+		
+		float scaleX=0.02f;
+		float scaleX2=0.01f;
+		float scaleX3=0.1f;
+		
+		scaleDraw(canvas,1+scaleX*count,1,0.5f,1,PUZZ_BODY);	
+		scaleDraw(canvas,1+scaleX2*count,1,0.5f,1,PUZZ_HAND);	
+		
+		canvas.drawBitmap(puzz[PUZZ_HEAD01], point[PUZZ_HEAD01].x, point[PUZZ_HEAD01].y+count, null);	
+			
+		counter();
+	}
+	
+	//얼굴, 몸통, 팔 -> 화면 중앙기준으로 확대
+	private void ani04(Canvas canvas){
+		canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
+		
+		float scale=0.1f;
+		
+		scaleDraw2(canvas,1+scale*count,1+scale*count, point[PUZZ_BODY].x, point[PUZZ_BODY].y+puzz[PUZZ_BODY].getHeight()/2, PUZZ_BODY);
+		scaleDraw2(canvas,1+scale*count,1+scale*count, point[PUZZ_BODY].x, point[PUZZ_BODY].y+puzz[PUZZ_BODY].getHeight()/2, PUZZ_HAND);
+		scaleDraw2(canvas,1+scale*count,1+scale*count, point[PUZZ_BODY].x, point[PUZZ_BODY].y+puzz[PUZZ_BODY].getHeight()/2, PUZZ_HEAD01);
+		
+		count++;
+		
+		if(count>11)
+		{
+			count=1;
+			phase++;
+		}
+	}	
+	
+	private void ani05(Canvas canvas){
+		canvas.drawBitmap(puzz[5], point[5].x, point[5].y, null);
+		phase++;
+	}
+
+	// scaleDraw(캔바스, 가로변화, 세로변화, 넓이중에서의 기준점 위치, 높이중에서의 기준점 위치 ex:3/2->3/2지점,그릴 파츠) 
+	private void scaleDraw(Canvas canvas,float sx,float sy,float bx,float by,int index){
+		canvas.save();
+		canvas.scale(sx, sy, point[index].x+puzz[index].getWidth()*bx, point[index].y+puzz[index].getHeight()*by);
+		canvas.drawBitmap(puzz[index], point[index].x, point[index].y, null);
+		canvas.restore();
+	}
+	
+	// scaleDraw(캔바스, 가로변화, 세로변화, 가로 기준점, 세로 기준점,그릴 파츠) 
+	private void scaleDraw2(Canvas canvas,float sx,float sy,float bx,float by,int index){
+		canvas.save();
+		canvas.scale(sx, sy, bx, by);
+		canvas.drawBitmap(puzz[index], point[index].x, point[index].y, null);
+		canvas.restore();
 	}
 	
 	private void counter(){
@@ -269,16 +329,9 @@ public class PuzzView extends SurfaceView implements Callback {
 		}
 		
 	}
-	//몸통,팔 -> 가로로 scale
-	private void ani03(Canvas canvas){
-		phase=5; //강제종료
-//		counter();
-	}
 	
-	//얼굴, 몸통, 팔 -> 화면 중앙기준으로 확대
-	private void ani04(Canvas canvas){
-		counter();
-	}
+	
+	
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {

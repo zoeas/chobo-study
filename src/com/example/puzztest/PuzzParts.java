@@ -19,7 +19,7 @@ public class PuzzParts {
 	Point[] point;
 	int width,height;
 	
-	final static int PUZZ_PARTS_NUMS=4;
+	final static int PUZZ_PARTS_NUMS=7;
 	
 	public PuzzParts(Context context){
 		DisplayMetrics outMetrics=new DisplayMetrics();
@@ -40,6 +40,9 @@ public class PuzzParts {
 		puzz[1]=BitmapFactory.decodeResource(res, R.drawable.puzz_hand);
 		puzz[2]=BitmapFactory.decodeResource(res, R.drawable.puzz_head01);
 		puzz[3]=BitmapFactory.decodeResource(res, R.drawable.puzz_head02);
+		puzz[4]=BitmapFactory.decodeResource(res, R.drawable.out01);
+		puzz[5]=BitmapFactory.decodeResource(res, R.drawable.out02);
+		puzz[6]=BitmapFactory.decodeResource(res, R.drawable.out03);
 		
 		resizeBitmap();
 		setCoordinates(density);
@@ -51,7 +54,7 @@ public class PuzzParts {
 		m.setScale(0.6f, 0.6f);
 		
 		
-		for(int i=0;i<puzz.length;i++){
+		for(int i=0;i<puzz.length-3;i++){
 			puzz[i]=Bitmap.createBitmap(puzz[i], 0, 0, puzz[i].getWidth(), puzz[i].getHeight(), m, false);
 		}
 	}
@@ -64,17 +67,26 @@ public class PuzzParts {
 		}
 	
 		//body
-		point[0].x=(width-puzz[0].getWidth())/2;
+		point[0].x=(width-puzz[0].getWidth())/2+(int)(15*density);
 		point[0].y=(height-puzz[0].getHeight())/2;
 		//hand
 		point[1].x=(int) (point[0].x+(20*density));
 		point[1].y=(int) (point[0].y+(50*density));
 		//head01
-		point[2].x=(int) (point[0].x+(12*density)); 
+		point[2].x=(int) (point[0].x+(15*density)); 
 		point[2].y=(int) (point[0].y-(47*density)); 
 		//head02
-		point[3].x=(int) (point[0].x+(12*density)); 
+		point[3].x=(int) (point[0].x+(15*density)); 
 		point[3].y=(int) (point[0].y-(47*density)); 
+		//out01
+		point[4].x=(int) (point[0].x+(35*density));
+		point[4].y=(int) (point[0].y+(85*density));
+		//out02
+		point[5].x=(int) (point[0].x+(35*density));
+		point[5].y=(int) (point[0].y+(85*density));
+		//out03
+		point[6].x=(int) (point[0].x+(35*density));
+		point[6].y=(int) (point[0].y+(85*density));
 		
 	}
 	
