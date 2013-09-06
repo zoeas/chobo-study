@@ -1,6 +1,10 @@
 package com.example.puzztest;
 
+import java.util.Random;
+
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,9 +17,9 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
-import android.view.WindowManager;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
+import android.widget.Toast;
 
 /*
  * puzz 구성품들을 다 읽어들임
@@ -53,6 +57,7 @@ public class PuzzView extends SurfaceView implements Callback {
 	//---------------
 
 	PuzzParts puzzParts;
+	PuzzDB puzzDB;
 	Bitmap[] puzz;
 	Point[] point;
 	
@@ -65,6 +70,8 @@ public class PuzzView extends SurfaceView implements Callback {
 		mHolder = getHolder();
 		mHolder.addCallback(this);
 		mcontext=context;
+		
+		puzzDB=new PuzzDB(context);
 		
 		DisplayMetrics outMetrics=new DisplayMetrics();
 //		((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(outMetrics);
@@ -304,6 +311,26 @@ public class PuzzView extends SurfaceView implements Callback {
 	}
 	
 	private void eggOn(){
+		SQLiteDatabase db=puzzDB.getReadableDatabase();
+		
+		String sql="SELECT grade,name FROM eggs";
+		final Cursor cursor=db.rawQuery(sql, null);
+		cursor.moveToNext();
+		
+		final int index=cursor.getCount();
+		
+		Random random=new Random();
+		final int outNum=random.nextInt(index);
+		
+		cursor.moveToPosition(outNum);
+		
+		post(new Runnable() {
+			
+			@Override
+			public void run() {
+				Toast.makeText(mcontext, "rare:"+cursor.getString(0)+",name:"+cursor.getString(1), Toast.LENGTH_LONG).show();	
+			}
+		});
 		
 	}
 
@@ -317,6 +344,14 @@ public class PuzzView extends SurfaceView implements Callback {
 	
 	// scaleDraw(캔바스, 가로변화, 세로변화, 가로 기준점, 세로 기준점,그릴 파츠) 
 	private void scaleDraw2(Canvas canvas,float sx,float sy,float bx,float by,int index){
+		canvas.save();
+		canvas.scale(sx, sy, bx, by);
+		canvas.drawBitmap(puzz[index], point[index].x, point[index].y, null);
+		canvas.restore();
+	}
+	
+	// matrix로 스케일링
+	private void scaleDraw3(Canvas canvas,float sx,float sy,float bx,float by,int index){
 		canvas.save();
 		canvas.scale(sx, sy, bx, by);
 		canvas.drawBitmap(puzz[index], point[index].x, point[index].y, null);
