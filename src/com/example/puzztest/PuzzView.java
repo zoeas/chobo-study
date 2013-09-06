@@ -46,6 +46,7 @@ public class PuzzView extends SurfaceView implements Callback {
 	Context mcontext;
 	SurfaceHolder mHolder;
 	int width,height;
+	boolean loop=true;
 	
 	// 디버그용 변수
 	int a,b,c,d;
@@ -56,6 +57,7 @@ public class PuzzView extends SurfaceView implements Callback {
 	Point[] point;
 	
 	int phase,count=1,bound=1;
+	private boolean ing=false;
 	
 
 	public PuzzView(Context context) {
@@ -116,7 +118,7 @@ public class PuzzView extends SurfaceView implements Callback {
 	}
 	
 	private void draw2(){
-		boolean loop=true;
+		
 		while(loop){
 			Canvas canvas = mHolder.lockCanvas();
 						
@@ -134,7 +136,6 @@ public class PuzzView extends SurfaceView implements Callback {
 				ani05(canvas);
 				break;
 			default:
-				loop=false;
 				break;
 			}
 			
@@ -143,11 +144,13 @@ public class PuzzView extends SurfaceView implements Callback {
 	}
 	
 
-	private void movePuzz(){
+	private synchronized void movePuzz(){
 		//ani01();
-		
+		ing=true;
+		loop=true;
 		phase=4;
 		draw2();
+		ing=false;
 //		ani02();
 //		ani03();
 //		ani04();
@@ -295,8 +298,13 @@ public class PuzzView extends SurfaceView implements Callback {
 	}	
 	
 	private void ani05(Canvas canvas){
+		eggOn();
 		canvas.drawBitmap(puzz[5], point[5].x, point[5].y, null);
-		phase++;
+		loop=false;
+	}
+	
+	private void eggOn(){
+		
 	}
 
 	// scaleDraw(캔바스, 가로변화, 세로변화, 넓이중에서의 기준점 위치, 높이중에서의 기준점 위치 ex:3/2->3/2지점,그릴 파츠) 
@@ -331,7 +339,11 @@ public class PuzzView extends SurfaceView implements Callback {
 	}
 	
 	
-	
+	class PuzzThread extends Thread{
+		public void run(){
+			movePuzz();
+		}
+	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
@@ -339,7 +351,9 @@ public class PuzzView extends SurfaceView implements Callback {
 		case MotionEvent.ACTION_DOWN:
 			break;
 		case MotionEvent.ACTION_UP:
-			movePuzz();
+			if(!ing){
+				new PuzzThread().start();
+			}
 			break;
 		}
 		return true;
